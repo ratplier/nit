@@ -1,0 +1,1 @@
+{"name":"nit","className":"ModuleScript","filePaths":["src\\init.luau","default.project.json"],"children":[{"name":"loader","className":"ModuleScript","filePaths":["src\\loader.luau"]},{"name":"types","className":"ModuleScript","filePaths":["src\\types.luau"]},{"name":"provider","className":"ModuleScript","filePaths":["src\\provider.luau"]}]}
