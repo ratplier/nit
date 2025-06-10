@@ -21,11 +21,11 @@ local nit = require(path.to.nit)
 ---
 
 ## lifecycles
-onInit - runs lifecycles sequentially before ignition
-onStart - runs lifecycles at once post ignition
-onTick - equivalent to `RunService.Heartbeat`
-onPhysics - equivalent to `RunService.Stepped`
-onRender - client only, equivalent to `RunService.RenderStepped`
+**onInit** - runs lifecycles sequentially before ignition  
+**onStart** - runs lifecycles at once post ignition  
+**onTick** - equivalent to `RunService.Heartbeat`  
+**onPhysics** - equivalent to `RunService.Stepped`  
+**onRender** - client only, equivalent to `RunService.RenderStepped`  
 
 ## examples
 
