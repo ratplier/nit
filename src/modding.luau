@@ -7,8 +7,12 @@ local internal = {
         lifecycleExecuted = {},
         lifecycleRegistered = {},
         lifecycleUnregistered = {},
+
+        providerRegistered = {},
+        singletonMounted = {},
     },
     lifecycles = {},
+    singletons = {},
 }
 
 local modding = {}
@@ -57,8 +61,19 @@ function modding.addLifecycle(name: string)
     fireConcurrent(internal.events.lifecycleAdded, name)
 end
 
-function modding.registerProvider(name: string, provider: types.Provider<any>)
+function modding.registerProvider(provider: types.RegisteredProvider<any>)
+    fireConcurrent(internal.events.providerRegistered, provider)
+end
 
+function modding.mountSingleton(name: string, provider: types.Provider<any>)
+    if internal.singletons[name] then return end
+
+    internal.singletons[name] = provider
+    fireConcurrent(internal.events.singletonMounted, provider)
+end
+
+function modding.singletonExists(name: string)
+    return internal.singletons[name] ~= nil
 end
 
 return modding
