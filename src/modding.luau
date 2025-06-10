@@ -1,22 +1,17 @@
 local types = require("./types")
 local util = require("./util")
 
-local events = {
-    lifecycleAdded = {},
-    lifecycleExecuted = {},
-    lifecycleRegistered = {},
-    lifecycleUnregistered = {},
-}
-local modding = {
-    lifecycles = {
-        onInit = {},
-        onStart = {},
-        onStop = {},
-        onTick = {},
-        onPhysics = {},
-        onRender = {},
+local internal = {
+    events = {
+        lifecycleAdded = {},
+        lifecycleExecuted = {},
+        lifecycleRegistered = {},
+        lifecycleUnregistered = {},
     },
+    lifecycles = {},
 }
+
+local modding = {}
 
 local function fireConcurrent<A...>(listeners: { types.Callback<A...> }, ...: A...)
     util.spawnCallbacks(listeners, ...)
@@ -29,22 +24,22 @@ local function fireSequential<A...>(listeners: { types.Callback<A...> }, ...: A.
 end
 
 function modding.registerLifecycle(name: string, callback: types.Callback<any>)
-    if not modding.lifecycles[name] then return end
+    if not internal.lifecycles[name] then return end
 
-    table.insert(modding.lifecycles[name], callback)
-    fireConcurrent(events.lifecycleRegistered, name, callback)
+    table.insert(internal.lifecycles[name], callback)
+    fireConcurrent(internal.events.lifecycleRegistered, name, callback)
 end
 
 function modding.unregisterLifecycle(name: string, callback: types.Callback<any>)
-    if not modding.lifecycles[name] then return end
+    if not internal.lifecycles[name] then return end
 
-    util.removeFromTable(modding.lifecycles[name], callback)
-    fireConcurrent(events.lifecycleUnregistered, name, callback)
+    util.removeFromTable(internal.lifecycles[name], callback)
+    fireConcurrent(internal.events.lifecycleUnregistered, name, callback)
 end
 
 function modding.executeLifecycle(name: string, ...: any)
-    if not modding.lifecycles[name] then return end
-    local lifecycles = modding.lifecycles[name]
+    if not internal.lifecycles[name] then return end
+    local lifecycles = internal.lifecycles[name]
 
     if name == "onInit" then
         fireSequential(lifecycles, ...)
@@ -52,14 +47,18 @@ function modding.executeLifecycle(name: string, ...: any)
         fireConcurrent(lifecycles, ...)
     end
 
-    fireConcurrent(events.lifecycleExecuted, name, ...)
+    fireConcurrent(internal.events.lifecycleExecuted, name, ...)
 end
 
 function modding.addLifecycle(name: string)
-    if modding.lifecycles[name] then return end
+    if internal.lifecycles[name] then return end
 
-    modding.lifecycles[name] = {}
-    fireConcurrent(events.lifecycleAdded, name)
+    internal.lifecycles[name] = {}
+    fireConcurrent(internal.events.lifecycleAdded, name)
+end
+
+function modding.registerProvider(name: string, provider: types.Provider<any>)
+
 end
 
 return modding
