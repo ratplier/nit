@@ -1,6 +1,4 @@
 --!strict
-local RunService = game:GetService("RunService")
-
 local types = require("./types")
 local util = require("./util")
 local modding = require("./modding")
@@ -36,17 +34,6 @@ local function topologicalSort(objects: { string }): { [string]: number }
     end
 
     return sorted
-end
-
-local function linkModuleLifecycles(module: { [any]: any })
-    for key, value in module do
-        if modding.lifecycleExists(key) then continue end
-        if typeof(value) ~= "function" then continue end
-
-        modding.watchLifecycle(key, function(...)
-            return value(module, ...)
-        end)
-    end
 end
 
 local nit = {}
@@ -96,31 +83,6 @@ function nit.ignite()
         end
         return sorted[a.name] < sorted[b.name]
     end)
-
-    for _, dependency in dependencies do
-        local provider = modding.getSingleton(dependency.name)
-        linkModuleLifecycles(provider)
-    end
-
-    local maid = util.maid()
-
-	local start = modding.createLifecycle("onStart")
-	local stop = modding.createLifecycle("onStop")
-	local beat = modding.createLifecycle("onTick")
-	local render = modding.createLifecycle("onRender")
-	local physics = modding.createLifecycle("onPhysics")
-	local init = modding.createLifecycle("onInit")
-
-    init()
-
-    maid.add(RunService.RenderStepped:Connect(render))
-    maid.add(RunService.Heartbeat:Connect(beat))
-    maid.add(RunService.Stepped:Connect(physics))
-
-    start()
-
-    modding.watchLifecycle("onStop", maid.cleanup)
-    return stop
 end
 
 nit.extend = function(...: types.DynamicTable)
@@ -133,18 +95,6 @@ nit.extend = function(...: types.DynamicTable)
 	end
 	return result
 end :: types.Extender
-
-nit.listen = function(name: string, listener: types.Callback)
-    modding.watchLifecycle("onInit", nit.ignite)
-end
-
-nit.onInit = function(listener) nit.listen("onInit", listener) end
-nit.onIgnition = function(listener) nit.listen("onStart", listener) end
-nit.onRelease = function(listener) nit.listen("onStop", listener) end
-
-nit.onRender = function(listener) nit.listen("onRender", listener) end
-nit.onUpdate = function(listener) nit.listen("onTick", listener) end
-nit.onPhysics = function(listener) nit.listen("onPhysics", listener) end
 
 nit.version = `nit {VERSION.major}.{VERSION.minor}.{VERSION.patch}`
 return nit:extend()
