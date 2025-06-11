@@ -46,12 +46,12 @@ local function executeLifecycle(name: string, ...: any)
 end
 
 function modding.registerLifecycle(name: string)
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "register lifecycle" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "register lifecycle" )
     internal.lifecycles[name] = internal.lifecycles[name] or {}
 end
 
 function modding.createLifecycle(name: string)
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "create lifecycle" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "create lifecycle" )
 
     modding.registerLifecycle(name)
     return function(...)
@@ -79,12 +79,12 @@ function modding.isLifecycle(name: string)
 end
 
 function modding.loadProvider(provider: types.RegisteredProvider)
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "load provider" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "load provider" )
     internal.loadedProviders[provider] = true
 end
 
 function modding.loadDescendants(parent: Instance, predicate: types.Predicate<Instance>?)
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "load descendants" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "load descendants" )
 
 	for _, descendant in parent:GetDescendants() do
         if predicate and not predicate(descendant) then continue end
@@ -97,7 +97,7 @@ function modding.loadDescendants(parent: Instance, predicate: types.Predicate<In
 end
 
 function modding.loadChildren(parent: Instance, predicate: types.Predicate<Instance>?)
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "load children" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "load children" )
 
 	modding.loadDescendants(parent, function(descendant: Instance)
 		local valid = descendant.Parent == parent
@@ -106,7 +106,7 @@ function modding.loadChildren(parent: Instance, predicate: types.Predicate<Insta
 end
 
 function modding.registerSingleton(name: string, provider: types.RegisteredProvider)
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "ignite" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "ignite" )
 	util.assert( provider._type == "registeredProvider", internal.errors.invalidProviderType, "registeredProvider", provider._type, provider._name )
 
 	internal.singletons[name] = provider
@@ -132,7 +132,7 @@ function modding.createProvider<T>(provider: types.DynamicTable<T>): types.Provi
 end
 
 function modding.registerProvider<T>(provider: types.Provider<T>)
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "register provider" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "register provider" )
 	util.assert( provider._type == "provider", internal.errors.invalidProviderType, "provider", provider._type, provider._name )
 
     internal.providers[provider._name] = provider
@@ -156,7 +156,7 @@ function modding.isProvider(provider: any)
 end
 
 function modding.loadProviderLifecycles(provider: types.RegisteredProvider)
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "load provider lifecycles" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "load provider lifecycles" )
 
     for name, lifecycle in provider::any do
         if not modding.isLifecycle(name) then continue end

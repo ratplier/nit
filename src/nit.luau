@@ -115,7 +115,7 @@ nit.extend = function(...: types.DynamicTable)
 end :: types.Extender
 
 nit.listen = function(name: string, listener: types.Callback)
-    modding.watchLifecycle("onInit", nit.ignite)
+    modding.watchLifecycle(name, listener)
 end
 
 nit.onInit = function(listener) nit.listen("onInit", listener) end
