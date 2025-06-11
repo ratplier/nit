@@ -1,3 +1,4 @@
+--!strict
 local types = require("./types")
 local util = require("./util")
 
@@ -5,8 +6,8 @@ local internal = {
     events = {
         lifecycleAdded = {},
         lifecycleExecuted = {},
-        lifecycleRegistered = {},
-        lifecycleUnregistered = {},
+        lifecycleListenerRegistered = {},
+        lifecycleListenerUnregistered = {},
 
         providerRegistered = {},
         singletonMounted = {},
@@ -46,19 +47,17 @@ function modding.registerLifecycleListener(name: string, callback: types.Callbac
     end
 
     table.insert(internal.lifecycles[name], callback)
-    fireConcurrent(internal.events.lifecycleRegistered, name, callback)
+    fireConcurrent(internal.events.lifecycleListenerRegistered, name, callback)
 end
 
-function modding.unregisterLifecycle(name: string, callback: types.Callback<any>)
+function modding.unregisterLifecycleListener(name: string, callback: types.Callback<any>)
     if not internal.lifecycles[name] then return end
 
     util.removeFromTable(internal.lifecycles[name], callback)
-    fireConcurrent(internal.events.lifecycleUnregistered, name, callback)
+    fireConcurrent(internal.events.lifecycleListenerUnregistered, name, callback)
 end
 
-function modding.addLifecycle(name: string)
-    if internal.lifecycles[name] then return end
-
+function modding.addLifecycle(name: string): types.Callback<...any>
     internal.lifecycles[name] = {}
     fireConcurrent(internal.events.lifecycleAdded, name)
 

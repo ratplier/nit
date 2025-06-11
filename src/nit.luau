@@ -1,3 +1,4 @@
+--!strict
 local RunService = game:GetService("RunService")
 
 local types = require("./types")
@@ -82,7 +83,7 @@ function nit.ignite()
 
     local dependencyNames = utils.map(dependencies, function(dependency)
         return dependency.name
-    end)
+    end) :: { string }
 
     local sorted = topologicalSort(dependencyNames)
     table.sort(dependencies, function(a, b)
@@ -94,8 +95,7 @@ function nit.ignite()
 
     for _, dependency in dependencies do
         local provider = modding.getSingleton(dependency.name)
-        local module = require(provider)
-        linkModuleLifecycles(module)
+        linkModuleLifecycles(provider)
     end
 
     local maid = utils.maid()

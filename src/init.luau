@@ -1,3 +1,4 @@
+--!strict
 local types = require(script.types)
 local nit = require(script.nit)
 local modding = require(script.modding)

@@ -1,3 +1,4 @@
+--!strict
 local types = require("./types")
 local utils = {}
 
@@ -71,6 +72,11 @@ function utils.maid()
         remove = remove,
         cleanup = cleanup,
     }
+end
+
+function utils.saferequire(path: Instance): any?
+    local success, result = pcall(require, path)
+    return success and result
 end
 
 return table.freeze(utils)
