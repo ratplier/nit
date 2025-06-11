@@ -79,4 +79,8 @@ function utils.saferequire(path: Instance): any?
     return success and result
 end
 
+function utils.contains(tbl: { any }, value: any)
+    return table.find(tbl, value) ~= nil
+end
+
 return table.freeze(utils)

@@ -70,6 +70,10 @@ function modding.isLifecycleRegistered(name: string)
     return internal.lifecycles[name] ~= nil
 end
 
+function modding.isLifecycleListenerRegistered(name: string, callback: types.Callback<any>)
+    return modding.isLifecycleRegistered(name) and util.contains(internal.lifecycles[name], callback)
+end
+
 function modding.mountSingleton(name: string, provider: types.Provider)
     if internal.singletons[name] then return end
 
