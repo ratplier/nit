@@ -130,7 +130,7 @@ nit.extend = function(...: types.DynamicTable)
 		end
 	end
 	return result
-end :: types.ExtendFunction
+end :: types.Extender
 
 nit.version = `nit {VERSION.major}.{VERSION.minor}.{VERSION.patch}`
-return nit
+return nit:extend()
