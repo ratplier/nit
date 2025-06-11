@@ -12,6 +12,7 @@ local internal = {
 		singletonRegistered = {} :: { types.Callback<types.RegisteredProvider> },
 		providerRegistered = {} :: { types.Callback<types.RegisteredProvider> },
 	},
+    providers = {},
 	lifecycles = {},
 	singletons = {},
 	errors = constants.errors,
@@ -106,7 +107,12 @@ end
 function modding.registerProvider<T>(provider: types.Provider<T>)
 	util.assert( provider._type == "provider", internal.errors.invalidProviderType, "provider", provider._type, provider._name )
 
+    internal.providers[provider._name] = provider
 	fireConcurrent(internal.events.providerRegistered, provider)
+end
+
+function modding.isProviderRegistered(name: string)
+    return internal.providers[name] ~= nil
 end
 
 function modding.getDependencies(provider: types.RegisteredProvider)
