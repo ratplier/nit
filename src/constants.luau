@@ -1,9 +1,7 @@
 return {
-    errors = {
-        lifecycleAlreadyRegistered = "Lifecycle '%s' already registered",
-        lifecycleNotFound = "Lifecycle '%s' not found",
-        singletonAlreadyRegistered = "Singleton '%s' already registered",
-        singletonNotFound = "Singleton '%s' not found",
+	errors = {
+		lifecycleRegistered = "Lifecycle '%s' already registered!",
+		invalidProviderType = "Expected type '%s', got '%s' for '%s'",
     },
     VERSION = { major = 2, minor = 0, patch = 0 },
 }
