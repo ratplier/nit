@@ -35,7 +35,7 @@ function utils.removeFromTable<T>(tbl: { T }, value: T)
     table.remove(tbl, index)
 end
 
-function utils.map<T>(tbl: { T }, callback: types.Callback<T>)
+function utils.map<T, R>(tbl: { T }, callback: types.Callback<(T), (R)>): { R }
     local result = {}
     for _, value in tbl do
         table.insert(result, callback(value))
