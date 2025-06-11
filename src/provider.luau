@@ -3,7 +3,7 @@ local types = require("./types")
 local modding = require("./modding")
 local provider = {}
 
-function provider.create<T>(provider: types.DynamicTable<T>): types.Provider<T>
+function provider.createProvider<T>(provider: types.DynamicTable<T>): types.Provider<T>
     provider._type = "provider"
     return provider
 end
@@ -23,6 +23,11 @@ function provider.register<T>(provider: types.Provider<T>, name: string?): types
 
     modding.registerProvider(registeredProvider)
     return registeredProvider
+end
+
+function provider.use<T>(provider: types.RegisteredProvider<T>): T
+	assert(provider._type == "registeredProvider", "Cannot use an unregistered provider")
+    return provider
 end
 
 return provider
