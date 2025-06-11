@@ -2,7 +2,7 @@
 local RunService = game:GetService("RunService")
 
 local types = require("./types")
-local utils = require("./util")
+local util = require("./util")
 local modding = require("./modding")
 local constants = require("./constants")
 
@@ -85,7 +85,7 @@ function nit.ignite()
         })
     end
 
-    local dependencyNames = utils.map(dependencies, function(dependency)
+    local dependencyNames = util.map(dependencies, function(dependency)
         return dependency.name
     end) :: { string }
 
@@ -102,7 +102,7 @@ function nit.ignite()
         linkModuleLifecycles(provider)
     end
 
-    local maid = utils.maid()
+    local maid = util.maid()
 
 	local start = modding.createLifecycle("onStart")
 	local stop = modding.createLifecycle("onStop")

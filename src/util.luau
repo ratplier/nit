@@ -1,6 +1,6 @@
 --!strict
 local types = require("./types")
-local utils = {}
+local util = {}
 
 local _freeThreads: { thread } = {}
 local function _resume(resume, thread, ...)
@@ -14,7 +14,7 @@ local function _yield()
     end
 end
 
-function utils.spawnCallback<A...>(callback: types.Callback<A...>, ...: A...)
+function util.spawnCallback<A...>(callback: types.Callback<A...>, ...: A...)
     local thread: thread = table.remove(_freeThreads) :: thread
     if thread == nil then
         thread = coroutine.create(_yield)
@@ -23,19 +23,19 @@ function utils.spawnCallback<A...>(callback: types.Callback<A...>, ...: A...)
     task.spawn(thread, callback, thread, ...)
 end
 
-function utils.spawnCallbacks<A...>(callbacks: { types.Callback<A...> }, ...: A...)
+function util.spawnCallbacks<A...>(callbacks: { types.Callback<A...> }, ...: A...)
     for _, callback in callbacks do
-        utils.spawnCallback(callback)
+        util.spawnCallback(callback)
     end
 end
 
-function utils.removeFromTable<T>(tbl: { T }, value: T)
+function util.removeFromTable<T>(tbl: { T }, value: T)
     local index = table.find(table, value)
     if not index then return end
     table.remove(tbl, index)
 end
 
-function utils.map<T, R>(tbl: { T }, callback: types.Callback<(T), (R)>): { R }
+function util.map<T, R>(tbl: { T }, callback: types.Callback<(T), (R)>): { R }
     local result = {}
     for _, value in tbl do
         table.insert(result, callback(value))
@@ -43,7 +43,7 @@ function utils.map<T, R>(tbl: { T }, callback: types.Callback<(T), (R)>): { R }
     return result
 end
 
-function utils.maid()
+function util.maid()
     local bin = {}
     type trash = types.Callback | RBXScriptConnection
 
@@ -52,7 +52,7 @@ function utils.maid()
     end
 
     local function remove(trash: trash)
-        utils.removeFromTable(bin, trash)
+        util.removeFromTable(bin, trash)
     end
 
     local function cleanup()
@@ -74,19 +74,19 @@ function utils.maid()
     }
 end
 
-function utils.saferequire(path: Instance): any?
+function util.saferequire(path: Instance): any?
     local success, result = pcall(require, path)
     return success and result
 end
 
-function utils.contains(tbl: { any }, value: any)
+function util.contains(tbl: { any }, value: any)
     return table.find(tbl, value) ~= nil
 end
 
-function utils.assert(condition: boolean, ...: any)
+function util.assert(condition: boolean, ...: any)
     if condition == nil or condition == false then
         error(string.format(...), 3)
     end
 end
 
-return table.freeze(utils)
+return table.freeze(util)
