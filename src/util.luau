@@ -34,4 +34,43 @@ function utils.removeFromTable<T>(tbl: { T }, value: T)
     table.remove(tbl, index)
 end
 
+function utils.map<T>(tbl: { T }, callback: types.Callback<T>)
+    local result = {}
+    for _, value in tbl do
+        table.insert(result, callback(value))
+    end
+    return result
+end
+
+function utils.maid()
+    local bin = {}
+    type trash = types.Callback | RBXScriptConnection
+
+    local function add(trash: trash)
+        table.insert(bin, trash)
+    end
+
+    local function remove(trash: trash)
+        utils.removeFromTable(bin, trash)
+    end
+
+    local function cleanup()
+        for _, trash in bin do
+            if typeof(trash) == "RBXScriptConnection" then
+                trash:Disconnect()
+            else
+                trash()
+            end
+        end
+
+        table.clear(bin)
+    end
+
+    return {
+        add = add,
+        remove = remove,
+        cleanup = cleanup,
+    }
+end
+
 return table.freeze(utils)

@@ -1,5 +1,6 @@
 --!strict
 export type Callback<A...=...unknown, R...=...unknown> = (A...) -> R...
+export type Predicate<T> = (T) -> boolean
 export type DynamicTable<T={}> = T & { [any]: any }
 
 export type providerType = "provider" | "registeredProvider"
