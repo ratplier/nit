@@ -119,4 +119,15 @@ function nit.ignite()
     return stop
 end
 
+nit.extend = function(...: types.DynamicTable)
+	local result = {}
+    for i = 1, select("#", ...) do
+        local source = select(i, ...)
+		for key, value in source do
+			result[key] = value
+		end
+	end
+	return result
+end :: types.ExtendFunction
+
 return nit
