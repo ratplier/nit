@@ -7,4 +7,6 @@ local provider = require(script.provider)
 export type Provider<T={}> = types.Provider<T>
 export type RegisteredProvider<T={}> = types.RegisteredProvider<T>
 
-return nit.extend(nit, provider, { modding = modding })
+return nit:extend({
+    modding = modding,
+}, provider)
