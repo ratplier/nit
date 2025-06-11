@@ -4,7 +4,9 @@ local RunService = game:GetService("RunService")
 local types = require("./types")
 local utils = require("./util")
 local modding = require("./modding")
+local constants = require("./constants")
 
+local VERSION = constants.VERSION
 local hasIgnited = false
 
 local loadedProviders = {}
@@ -130,4 +132,5 @@ nit.extend = function(...: types.DynamicTable)
 	return result
 end :: types.ExtendFunction
 
+nit.version = `nit {VERSION.major}.{VERSION.minor}.{VERSION.patch}`
 return nit
