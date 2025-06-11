@@ -5,20 +5,70 @@ local constants = require("./constants")
 
 local internal = {
 	events = {
+        lifecycleRegistered = {} :: { types.Callback<string> },
+        lifecycleWatched = {} :: { types.Callback<string> },
+        lifecycleUnwatched = {} :: { types.Callback<string> },
+
 		singletonRegistered = {} :: { types.Callback<types.RegisteredProvider> },
 		providerRegistered = {} :: { types.Callback<types.RegisteredProvider> },
 	},
 
     loadedProviders = {},
+    lifecycles = {},
     providers = {},
 	singletons = {},
+
 	errors = constants.errors,
+    ignited = false,
 }
 
 local modding = {}
 
 local function fireConcurrent<A...>(listeners: { types.Callback<A...> }, ...: A...)
 	util.spawnCallbacks(listeners, ...)
+end
+
+local function fireSequential<A...>(listeners: { types.Callback<A...> }, ...: A...)
+    for _, listener in listeners do
+        listener(...)
+    end
+end
+
+local function executeLifecycle(name: string, ...: any)
+    local lifecycle = internal.lifecycles[name]
+    if not lifecycle then return end
+
+    if name == "onInit" then
+        fireConcurrent(lifecycle, ...)
+    else
+        fireSequential(lifecycle, ...)
+    end
+end
+
+function modding.registerLifecycle(name: string)
+    internal.lifecycles[name] = internal.lifecycles[name] or {}
+end
+
+function modding.createLifecycle(name: string)
+    modding.registerLifecycle(name)
+    return function(...)
+        executeLifecycle(name, ...)
+    end
+end
+
+function modding.watchLifecycle(name: string, callback: types.Callback<any>)
+    modding.registerLifecycle(name)
+    table.insert(internal.lifecycles[name], callback)
+
+    return function()
+        modding.unwatchLifecycle(name, callback)
+    end
+end
+
+function modding.unwatchLifecycle(name: string, callback: types.Callback<any>)
+    local lifecycle = internal.lifecycles[name]
+    if not lifecycle then return end
+    util.removeFromTable(lifecycle, callback)
 end
 
 function modding.loadProvider(provider: types.RegisteredProvider)
