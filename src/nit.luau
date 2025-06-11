@@ -1,13 +1,13 @@
 --!strict
+local RunService = game:GetService("RunService")
+
 local types = require("./types")
 local util = require("./util")
 local modding = require("./modding")
 local constants = require("./constants")
 
 local VERSION = constants.VERSION
-local hasIgnited = false
 
-local loadedProviders = {}
 local function topologicalSort(objects: { string }): { [string]: number }
     local currentSize = 0
     local sorted: { [string]: number } = {}
@@ -39,21 +39,11 @@ end
 local nit = {}
 
 function nit.loadDescendants(parent: Instance, predicate: types.Predicate<Instance>?)
-	for _, descendant in parent:GetDescendants() do
-		if not descendant:IsA("ModuleScript") then continue end
-        if loadedProviders[descendant] then continue end
-
-        if not predicate or predicate(descendant) then continue end
-
-        loadedProviders[descendant] = true
-	end
+    modding.loadDescendants(parent, predicate)
 end
 
 function nit.loadChildren(parent: Instance, predicate: types.Predicate<Instance>?)
-	nit.loadDescendants(parent, function(descendant: Instance)
-		local valid = descendant.Parent == parent
-		return valid and (not predicate or predicate(descendant))
-	end)
+    modding.loadChildren(parent, predicate)
 end
 
 function nit.matchesName(name: string): types.Predicate<Instance>
@@ -61,8 +51,7 @@ function nit.matchesName(name: string): types.Predicate<Instance>
 end
 
 function nit.ignite()
-    if hasIgnited then return end
-    hasIgnited = true
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "ignite" )
 
     local dependencies: { { name: string, priority: number} } = {}
     for _, provider in modding.getSingletons() do
@@ -83,6 +72,31 @@ function nit.ignite()
         end
         return sorted[a.name] < sorted[b.name]
     end)
+
+    local maid = util.maid()
+
+    for _, dependency in dependencies do
+        local provider = modding.getSingleton(dependency.name)
+        modding.loadProviderLifecycles(provider)
+    end
+
+	local start = modding.createLifecycle("onStart")
+	local stop = modding.createLifecycle("onStop")
+	local beat = modding.createLifecycle("onTick")
+	local render = modding.createLifecycle("onRender")
+	local physics = modding.createLifecycle("onPhysics")
+	local init = modding.createLifecycle("onInit")
+
+    init()
+
+    maid.add(RunService.RenderStepped:Connect(render))
+    maid.add(RunService.Heartbeat:Connect(beat))
+    maid.add(RunService.Stepped:Connect(physics))
+
+    start()
+
+    modding.watchLifecycle("onStop", maid.cleanup)
+    return stop
 end
 
 nit.extend = function(...: types.DynamicTable)
@@ -95,6 +109,18 @@ nit.extend = function(...: types.DynamicTable)
 	end
 	return result
 end :: types.Extender
+
+nit.listen = function(name: string, listener: types.Callback)
+    modding.watchLifecycle("onInit", nit.ignite)
+end
+
+nit.onInit = function(listener) nit.listen("onInit", listener) end
+nit.onIgnition = function(listener) nit.listen("onStart", listener) end
+nit.onRelease = function(listener) nit.listen("onStop", listener) end
+
+nit.onRender = function(listener) nit.listen("onRender", listener) end
+nit.onUpdate = function(listener) nit.listen("onTick", listener) end
+nit.onPhysics = function(listener) nit.listen("onPhysics", listener) end
 
 nit.version = `nit {VERSION.major}.{VERSION.minor}.{VERSION.patch}`
 return nit:extend()

@@ -46,10 +46,13 @@ local function executeLifecycle(name: string, ...: any)
 end
 
 function modding.registerLifecycle(name: string)
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "register lifecycle" )
     internal.lifecycles[name] = internal.lifecycles[name] or {}
 end
 
 function modding.createLifecycle(name: string)
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "create lifecycle" )
+
     modding.registerLifecycle(name)
     return function(...)
         executeLifecycle(name, ...)
@@ -71,11 +74,18 @@ function modding.unwatchLifecycle(name: string, callback: types.Callback<any>)
     util.removeFromTable(lifecycle, callback)
 end
 
+function modding.isLifecycle(name: string)
+    return internal.lifecycles[name] ~= nil
+end
+
 function modding.loadProvider(provider: types.RegisteredProvider)
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "load provider" )
     internal.loadedProviders[provider] = true
 end
 
 function modding.loadDescendants(parent: Instance, predicate: types.Predicate<Instance>?)
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "load descendants" )
+
 	for _, descendant in parent:GetDescendants() do
         if predicate and not predicate(descendant) then continue end
 		if not descendant:IsA("ModuleScript") then continue end
@@ -87,17 +97,16 @@ function modding.loadDescendants(parent: Instance, predicate: types.Predicate<In
 end
 
 function modding.loadChildren(parent: Instance, predicate: types.Predicate<Instance>?)
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "load children" )
+
 	modding.loadDescendants(parent, function(descendant: Instance)
 		local valid = descendant.Parent == parent
 		return valid and (not predicate or predicate(descendant))
 	end)
 end
 
-function modding.matchesName(name: string): types.Predicate<Instance>
-	return function(moduleScript) return moduleScript.Name == name end
-end
-
 function modding.registerSingleton(name: string, provider: types.RegisteredProvider)
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "ignite" )
 	util.assert( provider._type == "registeredProvider", internal.errors.invalidProviderType, "registeredProvider", provider._type, provider._name )
 
 	internal.singletons[name] = provider
@@ -117,11 +126,13 @@ function modding.isSingletonRegistered(name: string)
 end
 
 function modding.createProvider<T>(provider: types.DynamicTable<T>): types.Provider<T>
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "create provider" )
 	provider._type = "provider"
 	return provider
 end
 
 function modding.registerProvider<T>(provider: types.Provider<T>)
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "register provider" )
 	util.assert( provider._type == "provider", internal.errors.invalidProviderType, "provider", provider._type, provider._name )
 
     internal.providers[provider._name] = provider
@@ -144,6 +155,19 @@ function modding.isProvider(provider: any)
     return typeof(provider) == "table" and provider._type == "registeredProvider"
 end
 
+function modding.loadProviderLifecycles(provider: types.RegisteredProvider)
+    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "load provider lifecycles" )
+
+    for name, lifecycle in provider::any do
+        if not modding.isLifecycle(name) then continue end
+        if typeof(lifecycle) ~= "function" then continue end
+        
+        modding.watchLifecycle(name, function(...)
+            lifecycle(provider, ...)
+        end)
+    end
+end
+
 function modding.getDependencies(provider: types.RegisteredProvider)
 	local dependencies = {}
 	for key, value in provider::any do
@@ -153,6 +177,10 @@ function modding.getDependencies(provider: types.RegisteredProvider)
 		dependencies[value._name] = value
 	end
 	return dependencies
+end
+
+function modding.ignite()
+    internal.ignited = true
 end
 
 function modding.providerRegistered(listener: types.Callback<types.RegisteredProvider>)
@@ -167,6 +195,10 @@ function modding.singletonRegistered(listener: types.Callback<types.RegisteredPr
 	return function()
 		util.removeFromTable(internal.events.singletonRegistered, listener)
 	end
+end
+
+function modding.ignited()
+    return internal.ignited
 end
 
 return modding
