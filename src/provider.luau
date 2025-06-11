@@ -4,8 +4,7 @@ local modding = require("./modding")
 local provider = {}
 
 function provider.createProvider<T>(provider: types.DynamicTable<T>): types.Provider<T>
-    provider._type = "provider"
-    return provider
+    return modding.createProvider(provider)
 end
 
 function provider.register<T>(provider: types.Provider<T>, name: string?): types.RegisteredProvider<T>

@@ -40,7 +40,7 @@ end
 
 local function linkModuleLifecycles(module: { [any]: any })
     for key, value in module do
-        if modding.isLifecycleRegistered(key) then continue end
+        if modding.doesLifecycleExist(key) then continue end
         if typeof(value) ~= "function" then continue end
 
         modding.registerLifecycleListener(key, value)
@@ -75,7 +75,7 @@ function nit.ignite()
     if hasIgnited then return end
     hasIgnited = true
 
-    local dependencies = {}
+    local dependencies: { { name: string, priority: number} } = {}
     for _, provider in modding.getSingletons() do
         table.insert(dependencies, {
             name = provider._name,

@@ -1,6 +1,7 @@
 --!strict
 local types = require("./types")
 local util = require("./util")
+local constants = require("./constants")
 
 local internal = {
     events = {
@@ -14,6 +15,7 @@ local internal = {
     },
     lifecycles = {},
     singletons = {},
+    errors = constants.errors,
 }
 
 local modding = {}
@@ -58,6 +60,8 @@ function modding.unregisterLifecycleListener(name: string, callback: types.Callb
 end
 
 function modding.addLifecycle(name: string): types.Callback<...any>
+    util.assert( internal.lifecycles[name] == nil, internal.errors.lifecycleAlreadyRegistered, name )
+
     internal.lifecycles[name] = {}
     fireConcurrent(internal.events.lifecycleAdded, name)
 
@@ -66,16 +70,16 @@ function modding.addLifecycle(name: string): types.Callback<...any>
     end
 end
 
-function modding.isLifecycleRegistered(name: string)
+function modding.doesLifecycleExist(name: string)
     return internal.lifecycles[name] ~= nil
 end
 
 function modding.isLifecycleListenerRegistered(name: string, callback: types.Callback<any>)
-    return modding.isLifecycleRegistered(name) and util.contains(internal.lifecycles[name], callback)
+    return modding.doesLifecycleExist(name) and util.contains(internal.lifecycles[name], callback)
 end
 
-function modding.mountSingleton(name: string, provider: types.Provider)
-    if internal.singletons[name] then return end
+function modding.mountSingleton(name: string, provider: types.RegisteredProvider)
+    util.assert(provider._type == "registeredProvider", internal.errors.singletonNotFound, name)
 
     internal.singletons[name] = provider
     fireConcurrent(internal.events.singletonMounted, provider)
@@ -91,6 +95,11 @@ end
 
 function modding.singletonExists(name: string)
     return internal.singletons[name] ~= nil
+end
+
+function modding.createProvider<T>(provider: types.DynamicTable<T>): types.Provider<T>
+    provider._type = "provider"
+    return provider
 end
 
 function modding.registerProvider(provider: types.RegisteredProvider)

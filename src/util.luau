@@ -83,4 +83,10 @@ function utils.contains(tbl: { any }, value: any)
     return table.find(tbl, value) ~= nil
 end
 
+function utils.assert(condition: boolean, ...: any)
+    if condition == nil or condition == false then
+        error(string.format(...), 3)
+    end
+end
+
 return table.freeze(utils)
