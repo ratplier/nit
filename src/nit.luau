@@ -38,6 +38,10 @@ end
 
 local nit = {}
 
+function nit.createLifecycle(name: string)
+    return modding.createLifecycle(name)
+end
+
 function nit.loadDescendants(parent: Instance, predicate: types.Predicate<Instance>?)
     modding.loadDescendants(parent, predicate)
 end
@@ -121,6 +125,15 @@ nit.onRelease = function(listener) nit.listen("onStop", listener) end
 nit.onRender = function(listener) nit.listen("onRender", listener) end
 nit.onUpdate = function(listener) nit.listen("onTick", listener) end
 nit.onPhysics = function(listener) nit.listen("onPhysics", listener) end
+
+nit.onTick = function(...)
+    warn("nit.onTick is deprecated, use nit.onUpdate instead")
+    return nit.onUpdate(...)
+end
+nit.addLifecycle = function(...)
+    warn("nit.addLifecycle is deprecated, use nit.createLifecycle instead")
+    return nit.listen(...)
+end
 
 nit.version = `nit {VERSION.major}.{VERSION.minor}.{VERSION.patch}`
 return nit:extend()
