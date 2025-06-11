@@ -8,6 +8,8 @@ local internal = {
 		singletonRegistered = {} :: { types.Callback<types.RegisteredProvider> },
 		providerRegistered = {} :: { types.Callback<types.RegisteredProvider> },
 	},
+
+    loadedProviders = {},
     providers = {},
 	singletons = {},
 	errors = constants.errors,
@@ -17,6 +19,32 @@ local modding = {}
 
 local function fireConcurrent<A...>(listeners: { types.Callback<A...> }, ...: A...)
 	util.spawnCallbacks(listeners, ...)
+end
+
+function modding.loadProvider(provider: types.RegisteredProvider)
+    internal.loadedProviders[provider] = true
+end
+
+function modding.loadDescendants(parent: Instance, predicate: types.Predicate<Instance>?)
+	for _, descendant in parent:GetDescendants() do
+        if predicate and not predicate(descendant) then continue end
+		if not descendant:IsA("ModuleScript") then continue end
+
+        local provider = util.saferequire(descendant)
+        if not modding.isProvider(provider) then continue end
+        modding.loadProvider(provider :: types.RegisteredProvider)
+	end
+end
+
+function modding.loadChildren(parent: Instance, predicate: types.Predicate<Instance>?)
+	modding.loadDescendants(parent, function(descendant: Instance)
+		local valid = descendant.Parent == parent
+		return valid and (not predicate or predicate(descendant))
+	end)
+end
+
+function modding.matchesName(name: string): types.Predicate<Instance>
+	return function(moduleScript) return moduleScript.Name == name end
 end
 
 function modding.registerSingleton(name: string, provider: types.RegisteredProvider)
@@ -50,8 +78,20 @@ function modding.registerProvider<T>(provider: types.Provider<T>)
 	fireConcurrent(internal.events.providerRegistered, provider)
 end
 
+function modding.getProvider(name: string)
+    return internal.providers[name]
+end
+
+function modding.getProviders()
+    return internal.providers
+end
+
 function modding.isProviderRegistered(name: string)
     return internal.providers[name] ~= nil
+end
+
+function modding.isProvider(provider: any)
+    return typeof(provider) == "table" and provider._type == "registeredProvider"
 end
 
 function modding.getDependencies(provider: types.RegisteredProvider)
