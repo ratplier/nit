@@ -1,4 +1,4 @@
---!strict
+ --!strict
 local types = require("./types")
 local util = require("./util")
 local constants = require("./constants")
@@ -46,7 +46,6 @@ local function executeLifecycle(name: string, ...: any)
 end
 
 function modding.registerLifecycle(name: string)
-    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "register lifecycle" )
     internal.lifecycles[name] = internal.lifecycles[name] or {}
 end
 
@@ -62,7 +61,7 @@ end
 function modding.watchLifecycle(name: string, callback: types.Callback<any>)
     modding.registerLifecycle(name)
     table.insert(internal.lifecycles[name], callback)
-
+	
     return function()
         modding.unwatchLifecycle(name, callback)
     end
@@ -126,16 +125,16 @@ function modding.isSingletonRegistered(name: string)
 end
 
 function modding.createProvider<T>(provider: types.DynamicTable<T>): types.Provider<T>
-    util.assert( modding.ignited(), constants.errors.alreadyIgnited, "create provider" )
+    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "create provider" )
 	provider._type = "provider"
 	return provider
 end
 
-function modding.registerProvider<T>(provider: types.Provider<T>)
+function modding.registerProvider<T>(provider: types.RegisteredProvider<T>)
     util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "register provider" )
-	util.assert( provider._type == "provider", internal.errors.invalidProviderType, "provider", provider._type, provider._name )
+	util.assert( provider._type == "registeredProvider", internal.errors.invalidProviderType, "provider", provider._type, provider._name )
 
-    internal.providers[provider._name] = provider
+    table.insert(internal.providers, provider)
 	fireConcurrent(internal.events.providerRegistered, provider)
 end
 
@@ -156,10 +155,7 @@ function modding.isProvider(provider: any)
 end
 
 function modding.loadProviderLifecycles(provider: types.RegisteredProvider)
-    util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "load provider lifecycles" )
-
-    for name, lifecycle in provider::any do
-        if not modding.isLifecycle(name) then continue end
+	for name, lifecycle in provider::any do
         if typeof(lifecycle) ~= "function" then continue end
         
         modding.watchLifecycle(name, function(...)

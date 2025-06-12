@@ -79,10 +79,6 @@ function util.saferequire(path: Instance): any?
     return success and result
 end
 
-function util.contains(tbl: { any }, value: any)
-    return table.find(tbl, value) ~= nil
-end
-
 function util.assert(condition: boolean, ...: any)
     if condition == nil or condition == false then
         error(string.format(...), 3)
