@@ -5,7 +5,7 @@ local constants = require("./constants")
 
 local internal = {
 	events = {
-        lifecycleRegistered = {} :: { types.Callback<string> },
+        lifecycleCreated = {} :: { types.Callback<string> },
         lifecycleWatched = {} :: { types.Callback<string> },
         lifecycleUnwatched = {} :: { types.Callback<string> },
 
@@ -53,6 +53,8 @@ function modding.createLifecycle(name: string)
     util.assert( not modding.ignited(), constants.errors.alreadyIgnited, "create lifecycle" )
 
     modding.registerLifecycle(name)
+    fireConcurrent(internal.events.lifecycleCreated, name)
+
     return function(...)
         executeLifecycle(name, ...)
     end
@@ -62,6 +64,8 @@ function modding.watchLifecycle(name: string, callback: types.Callback<any>)
     modding.registerLifecycle(name)
     table.insert(internal.lifecycles[name], callback)
 	
+    fireConcurrent(internal.events.lifecycleWatched, name)
+
     return function()
         modding.unwatchLifecycle(name, callback)
     end
@@ -71,6 +75,8 @@ function modding.unwatchLifecycle(name: string, callback: types.Callback<any>)
     local lifecycle = internal.lifecycles[name]
     if not lifecycle then return end
     util.removeFromTable(lifecycle, callback)
+
+    fireConcurrent(internal.events.lifecycleUnwatched, name)
 end
 
 function modding.isLifecycle(name: string)
@@ -190,6 +196,27 @@ function modding.singletonRegistered(listener: types.Callback<types.RegisteredPr
 	table.insert(internal.events.singletonRegistered, listener)
 	return function()
 		util.removeFromTable(internal.events.singletonRegistered, listener)
+	end
+end
+
+function modding.lifecycleCreated(listener: types.Callback<string>)
+	table.insert(internal.events.lifecycleCreated, listener)
+	return function()
+		util.removeFromTable(internal.events.lifecycleCreated, listener)
+	end
+end
+
+function modding.lifecycleWatched(listener: types.Callback<string>)
+	table.insert(internal.events.lifecycleWatched, listener)
+	return function()
+		util.removeFromTable(internal.events.lifecycleWatched, listener)
+	end
+end
+
+function modding.lifecycleUnwatched(listener: types.Callback<string>)
+	table.insert(internal.events.lifecycleUnwatched, listener)
+	return function()
+		util.removeFromTable(internal.events.lifecycleUnwatched, listener)
 	end
 end
 
