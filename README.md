@@ -129,5 +129,4 @@ nit = nit:extend(instance) -- extend nit with the plugin
 print(nit.create("Part").ClassName == "Part") -- true
 ```
 > [!CAUTION]
-> make sure to use nit:extend instead of nit.extend or else you will  
-> have to manually pass nit into the extend call `nit.extend(nit, ...)`  
+> make sure to use nit:extend instead of nit.extend or else you will have to manually pass nit into the extend call `nit.extend(nit, ...)`  
