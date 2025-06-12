@@ -1,5 +1,7 @@
 # nit
-inspired by **ohmyprvd** *(v0.1)* and **flamework**
+inspired by **ohmyprvd** *(v0.1)* and **flamework**  
+goal is to be flamework but for luau  
+so far partially there
 
 ```lua
 local nit = require(path.to.nit)
@@ -14,18 +16,45 @@ local nit = require(path.to.nit)
 | `nit.createProvider(provider)`           | creates a empty provider                                                            |
 | `nit.loadDescendants(parent, predicate)` | loads all descendant providers of a parent with a optional predicate                |
 | `nit.loadChildren(parent, predicate)`    | loads all children providers of a parent with optional predicate                    |
-| `nit.matchesName(name)`                  | built-in predicate function that matches providers by name                          |
 | `nit.ignite()`                           | starts the framework, initializing and running registered providers                 |
+
+### extras
+
+| Function                                 | Description                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------|
 | `nit.extend(table1, table2, ...)`        | merges multiple tables into a new table. used for extending the base nit interface  |
+| `nit.matchesName(name)`                  | built-in predicate function that matches providers by name                          |
+| `nit.onInit(listener)`                   | listens to `onInit` lifecycle                                                       |
+| `nit.onTick(listener)`                   | listens to `onTick` lifecycle                                                     	 |
+| `nit.onPhysics(listener)`                | listens to `onPhysics` lifecycle                                                    |
+| `nit.onRender(listener)`                 | listens to `onRender` lifecycle on the client                                       |
+| `nit.onRelease(listener)`                | listens to `onRelease` lifecycle                                                    |
+| `nit.createLifecycle(name)`              | creates a custom lifecycle with the given name                                      |
+
+### modding
+
+| Function                                    | Description                            |
+| --------------------------------------------| ---------------------------------------|
+| `modding.providerRegistered(listener)`      | listens to provider registrations      |
+| `modding.singletonRegistered(listener)`     | listens to singleton registrations     |
+| `modding.lifecycleRegistered(name)`         | listens to lifecycle registrations     |
+| `modding.providerUnregistered(provider)`    | listens to provider unregistrations    |
+| `modding.singletonUnregistered(name)`       | listens to singleton unregistrations   |
+| `modding.getSingleton(name)`                | returns a registered singleton by name |
+| `modding.getProviders()`                    | returns all registered providers       |
+| `modding.getSingleton(name)`                | returns a registered singleton by name |
+
 
 ---
 
-## lifecycles
-**onInit** - runs lifecycles sequentially before ignition  
-**onStart** - runs lifecycles at once post ignition  
-**onTick** - equivalent to `RunService.Heartbeat`  
-**onPhysics** - equivalent to `RunService.Stepped`  
-**onRender** - client only, equivalent to `RunService.RenderStepped`  
+## built-in lifecycles
+| Lifecycle   | Description                                         |
+|-------------|-----------------------------------------------------|
+| **onInit**  | Runs lifecycles sequentially before ignition        |
+| **onStart** | Runs lifecycles at once post ignition               |
+| **onTick**  | Equivalent to `RunService.Heartbeat`                |
+| **onPhysics** | Equivalent to `RunService.Stepped`                |
+| **onRender** | Client only, equivalent to `RunService.RenderStepped` |
 
 ## examples
 
@@ -69,10 +98,11 @@ local RunService = game:GetService("RunService")
 local nit = require("nit")
 
 local render = nit.addLifecycle("renderStep")
-RunService.RenderStepped:Connect(render)
-
 nit.loadDescendants(path.to.providers)
 nit.ignite()
+
+-- make sure to activate lifecycles after ignition
+RunService.RenderStepped:Connect(render)
 ```
 
 ---
@@ -94,17 +124,10 @@ local nit = require("nit")
 local instance = require(path.to.Instance)
 
 nit = nit:extend(instance) -- extend nit with the plugin
+-- 
+
 print(nit.create("Part").ClassName == "Part") -- true
 ```
-
----
-
-```lua
-local nit = require("nit")
-local pluginsA = require("pluginsA")
-local pluginsB = require("pluginsB")
-
--- extend nit with both plugins at once for proper typechecking
-nit = nit:extend(pluginsA, pluginsB)
-nit = nit:extend(pluginsA):extend(pluginsB) -- avoid this! Only pluginsB will be typechecked with nit.
-```
+> [!CAUTION]
+> make sure to use nit:extend instead of nit.extend or else you will  
+> have to manually pass nit into the extend call `nit.extend(nit, ...)`  
