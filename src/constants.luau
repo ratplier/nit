@@ -7,5 +7,5 @@ return {
 
         alreadyIgnited = "cannot %s after ignition",
     },
-    VERSION = { major = 2, minor = 0, patch = 0 },
+    VERSION = { major = 0, minor = 2 },
 }

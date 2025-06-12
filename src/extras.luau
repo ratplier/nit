@@ -139,5 +139,5 @@ extras.addLifecycle = function(...)
     return extras.createLifecycle(...)
 end
 
-extras.version = `nit {VERSION.major}.{VERSION.minor}.{VERSION.patch}`
+extras.version = `nit {VERSION.major}.{VERSION.minor}`
 return extras:extend()
