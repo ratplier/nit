@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # project files
 /nit.rbxlx
 /nit.rbxm
@@ -13,3 +14,11 @@ lune_packages
 
 #rojo
 sourcemap.json
+=======
+# Project place file
+/nit.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+>>>>>>> origin/master
